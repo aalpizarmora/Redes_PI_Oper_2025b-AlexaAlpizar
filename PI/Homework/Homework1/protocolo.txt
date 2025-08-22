@@ -1,0 +1,13 @@
+# Borrador del protocolo simple
+# Cliente pide el recurso (whale-1.txt)
+Cliente → Servidor: GET /aArt/index.php?disk=Disk-01&fig=whale-1.txt HTTP/1.1
+Host: redes.ecci
+
+# Servidor responde con el contenido del archivo
+Servidor → Cliente: HTTP/1.1 250 Here is your whale!
+Content-Length: <tamaño del archivo>
+Content-Type: text/plain
+
+<contenido de whale-1.txt>
+
+# Fin

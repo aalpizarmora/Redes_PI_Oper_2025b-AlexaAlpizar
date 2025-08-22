@@ -246,6 +246,9 @@ size_t VSocket::sendTo( const void * buffer, size_t size, void * addr ) {
  **/
 size_t VSocket::recvFrom( void * buffer, size_t size, void * addr ) {
    int st = -1;
+   socklen_t addrSocklen;
+   addrSocklen = sizeof (struct sockaddr_in);
+   st = recvfrom(this->idSocket, buffer, size, 0,(struct sockaddr *) addr, &addrSocklen);
    return st;
 
 }

@@ -224,6 +224,9 @@ int VSocket::Bind( int port ) {
  **/
 size_t VSocket::sendTo( const void * buffer, size_t size, void * addr ) {
    int st = -1;
+   socklen_t addrSocklen;
+   addrSocklen = sizeof (struct sockaddr_in);
+   st = sendto(this->idSocket, buffer, size, 0,(struct sockaddr *) addr, addrSocklen);
    return st;
 
 }

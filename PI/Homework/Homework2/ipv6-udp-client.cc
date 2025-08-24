@@ -5,11 +5,9 @@
   *  2025-i
   *  Grupos: 1 y 3
   *
-  ****** Socket class interface
-  *
   * (Fedora version)
   *
-  *   Client side implementation of UDP client-server model 
+  *   Client side implementation of IPv6 UDP client-server model 
   *
  **/
 
@@ -19,9 +17,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h>
 
-#include "VSocket.h"
 #include "Socket.h"
-#include <cstdlib>
 
 #define PORT    1234 
 #define MAXLINE 1024 
@@ -31,21 +27,17 @@ int main() {
    int sockfd; 
    int n, len; 
    char buffer[MAXLINE]; 
-   char *hello = (char *) "Hello from CI0123 client"; 
-   struct sockaddr_in other;
+   char *hello = (char *) "Hello from client"; 
+   struct sockaddr_in6 other;
 
-   client = new Socket( 'd' );	// Creates an UDP socket: datagram
+   client = new Socket( 'd', true );
 
    memset( &other, 0, sizeof( other ) ); 
    
-   other.sin_family = AF_INET; 
-   other.sin_port = htons( PORT ); 
-   n = inet_pton( AF_INET, "127.0.0.1", &other.sin_addr );	// IP address to test our client with a Python server on lab 3-5
-   if ( 1 != n ) {
-      printf( "Error converting from IP address\n" );
-      exit( 23 );
-   }
-
+   other.sin6_family = AF_INET6; 
+   other.sin6_port = htons(PORT); 
+   other.sin6_addr = in6addr_any; 
+   
    n = client->sendTo( (void *) hello, strlen( hello ), (void *) & other ); 
    printf("Client: Hello message sent.\n"); 
    

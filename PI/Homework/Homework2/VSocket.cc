@@ -199,13 +199,13 @@ int VSocket::EstablishConnection( const char *host, const char *service ) {
 int VSocket::Bind( int port ) {
    int st = -1;
 
-      struct sockaddr_in host4;
+      struct sockaddr_in6 host6;
+      memset(&host6, 0, sizeof(host6));
 
-      host4.sin_family = AF_INET;
-      host4.sin_addr.s_addr = htonl( INADDR_ANY );
-      host4.sin_port = htons( port );
-      memset(host4.sin_zero, '\0', sizeof (host4.sin_zero));
-      st = bind(this->idSocket, (struct sockaddr *) &host4, sizeof(host4));
+      host6.sin6_family = AF_INET6;
+      host6.sin6_addr = in6addr_any;
+      host6.sin6_port = htons( port );
+      st = bind(this->idSocket, (struct sockaddr *) &host6, sizeof(host6));
 
    return st;
 
@@ -225,7 +225,7 @@ int VSocket::Bind( int port ) {
 size_t VSocket::sendTo( const void * buffer, size_t size, void * addr ) {
    int st = -1;
    socklen_t addrSocklen;
-   addrSocklen = sizeof (struct sockaddr_in);
+   addrSocklen = sizeof (struct sockaddr_in6);
    st = sendto(this->idSocket, buffer, size, 0,(struct sockaddr *) addr, addrSocklen);
    return st;
 
@@ -247,7 +247,7 @@ size_t VSocket::sendTo( const void * buffer, size_t size, void * addr ) {
 size_t VSocket::recvFrom( void * buffer, size_t size, void * addr ) {
    int st = -1;
    socklen_t addrSocklen;
-   addrSocklen = sizeof (struct sockaddr_in);
+   addrSocklen = sizeof (struct sockaddr_in6);
    st = recvfrom(this->idSocket, buffer, size, 0,(struct sockaddr *) addr, &addrSocklen);
    return st;
 

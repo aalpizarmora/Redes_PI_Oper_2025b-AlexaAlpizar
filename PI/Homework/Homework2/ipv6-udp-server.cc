@@ -5,11 +5,9 @@
   *  2025-i
   *  Grupos: 1 y 3
   *
-  ****** Socket class interface
-  *
   * (Fedora version)
   *
-  *  Server-side implementation of UDP client-server model	
+  *  Server-side implementation of UDP client-server model for IPv6	
   *
  **/
 
@@ -19,7 +17,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "VSocket.h" 
 #include "Socket.h" 
 
 #define PORT	1234 
@@ -33,7 +30,7 @@ int main() {
    char buffer[MAXLINE]; 
    char *hello = (char *) "Hello from CI0123 server"; 
 	
-   server = new Socket( 'd', false );
+   server = new Socket( 'd', true );
    server->Bind( PORT );
 
    memset( &other, 0, sizeof( other ) );

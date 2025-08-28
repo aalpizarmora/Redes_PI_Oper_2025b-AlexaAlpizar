@@ -174,7 +174,7 @@ int SSLSocket::MakeConnection( const char * hostName, int port ) {
    int st;
    st = this->EstablishConnection(hostName, port);
    SSL *ssl = (SSL *)(this->SSLStruct);
-   
+
    if (!ssl) {
         throw std::runtime_error("SSLSocket::MakeConnection - SSL object is null");
     }
@@ -202,7 +202,18 @@ int SSLSocket::MakeConnection( const char * hostName, int port ) {
  **/
 int SSLSocket::MakeConnection( const char * host, const char * service ) {
    int st;
+   st = this->EstablishConnection(host, service);
+
+   SSL *ssl = (SSL *)(this->SSLStruct);
+   if (!ssl) {
+      throw std::runtime_error("SSLSocket::MakeConnection(service) - SSL object is null");
+   }
    
+   SSL_set_fd(ssl, this->idSocket);
+   if (SSL_connect(ssl) <= 0) {
+      ERR_print_errors_fp(stderr);
+      throw std::runtime_error("SSLSocket::MakeConnection(service) - SSL_connect failed");
+   }
 
    return st;
 

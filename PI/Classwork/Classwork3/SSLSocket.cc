@@ -97,17 +97,7 @@ SSLSocket::~SSLSocket() {
   *
  **/
 void SSLSocket::Init( bool serverContext ) {
-   SSL * ssl = nullptr;
-
-   this->InitContext( serverContext );
    
-   ssl = SSL_new( (SSL_CTX *) this->SSLContext );
-   if (nullptr == ssl) {
-      ERR_print_errors_fp(stderr);
-      throw std::runtime_error("SSLSocket::InitContext- Cannot create");
-   }
-
-   this->SSLStruct = (void *) ssl;
 
 }
 
@@ -120,31 +110,7 @@ void SSLSocket::Init( bool serverContext ) {
   *
  **/
 void SSLSocket::InitContext( bool serverContext ) {
-   const SSL_METHOD * method;
-   SSL_CTX * context;
-
-   SSL_library_init();
-   OpenSSL_add_all_algorithms();
-   SSL_load_error_strings();
-
-   if ( serverContext ) {
-      method = TLS_server_method(); // espera conexiones
-   } else {
-      method = TLS_client_method(); // inicia conexiones
-   }
-
-   if ( nullptr == method ) {
-      throw std::runtime_error( "SSLSocket::InitContext( bool )" );
-   }
-
-   context = SSL_CTX_new(method);
-
-   if (nullptr == context) {
-      ERR_print_errors_fp(stderr);
-      throw std::runtime_error("SSLSocket::InitContext- Cannot create");
-      }
-
-   this->SSLContext = (void *) context;
+   
 }
 
 
@@ -172,18 +138,7 @@ void SSLSocket::InitContext( bool serverContext ) {
  **/
 int SSLSocket::MakeConnection( const char * hostName, int port ) {
    int st;
-   st = this->EstablishConnection(hostName, port);
-   SSL *ssl = (SSL *)(this->SSLStruct);
-   if (!ssl) {
-        throw std::runtime_error("SSLSocket::MakeConnection - SSL object is null");
-    }
    
-   SSL_set_fd(ssl, this->idSocket);
-   if (SSL_connect(ssl) <= 0) {
-        ERR_print_errors_fp(stderr);
-        throw std::runtime_error("SSLSocket::MakeConnection - SSL_connect failed");
-      }
-
    return st;
 
 }
@@ -201,18 +156,7 @@ int SSLSocket::MakeConnection( const char * hostName, int port ) {
  **/
 int SSLSocket::MakeConnection( const char * host, const char * service ) {
    int st;
-   st = this->EstablishConnection(host, service);
-
-   SSL *ssl = (SSL *)(this->SSLStruct);
-   if (!ssl) {
-      throw std::runtime_error("SSLSocket::MakeConnection(service) - SSL object is null");
-   }
    
-   SSL_set_fd(ssl, this->idSocket);
-   if (SSL_connect(ssl) <= 0) {
-      ERR_print_errors_fp(stderr);
-      throw std::runtime_error("SSLSocket::MakeConnection(service) - SSL_connect failed");
-   }
 
    return st;
 
@@ -233,12 +177,7 @@ int SSLSocket::MakeConnection( const char * host, const char * service ) {
  **/
 size_t SSLSocket::Read( void * buffer, size_t size ) {
    size_t st = -1;
-   SSL *ssl = (SSL *)(this->SSLStruct);
-   st = SSL_read(ssl, buffer, static_cast<int>(size));
-
-   if ( -1 == st ) {
-      throw std::runtime_error( "SSLSocket::Read( void *, size_t )" );
-   }
+   
 
    return st;
 
@@ -277,14 +216,7 @@ size_t SSLSocket::Write( const char * string ) {
   *
  **/
 size_t SSLSocket::Write( const void * buffer, size_t size ) {
-   int st = -1;
-   SSL *ssl = (SSL*)(this->SSLStruct);
-   st = SSL_write(ssl, buffer, static_cast<int>(size));
-   if ( -1 == st ) {
-      throw std::runtime_error( "SSLSocket::Write( void *, size_t )" );
-   }
-
-   return st;
+   
 
 }
 

@@ -234,7 +234,12 @@ int SSLSocket::MakeConnection( const char * host, const char * service ) {
  **/
 size_t SSLSocket::Read( void * buffer, size_t size ) {
    size_t st = -1;
-   
+   SSL *ssl = (SSL *)(this->SSLStruct);
+   st = SSL_read(ssl, buffer, static_cast<int>(size));
+
+   if ( -1 == st ) {
+      throw std::runtime_error( "SSLSocket::Read( void *, size_t )" );
+   }
 
    return st;
 

@@ -120,7 +120,31 @@ void SSLSocket::Init( bool serverContext ) {
   *
  **/
 void SSLSocket::InitContext( bool serverContext ) {
-   
+   const SSL_METHOD * method;
+   SSL_CTX * context;
+
+   SSL_library_init();
+   OpenSSL_add_all_algorithms();
+   SSL_load_error_strings();
+
+   if ( serverContext ) {
+      method = TLS_server_method(); // espera conexiones
+   } else {
+      method = TLS_client_method(); // inicia conexiones
+   }
+
+   if ( nullptr == method ) {
+      throw std::runtime_error( "SSLSocket::InitContext( bool )" );
+   }
+
+   context = SSL_CTX_new(method);
+
+   if (nullptr == context) {
+      ERR_print_errors_fp(stderr);
+      throw std::runtime_error("SSLSocket::InitContext- Cannot create");
+      }
+
+   this->SSLContext = (void *) context;
 }
 
 

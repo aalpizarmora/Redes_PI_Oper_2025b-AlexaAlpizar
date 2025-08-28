@@ -22,8 +22,8 @@ int main( int argc, char * argv[] ) {
    int st, port = 80;
    char a[ MAXBUF ];
    char * os = (char *) "163.178.104.62";
-   char * whale = (char *) "GET /aArt/index.php?disk=Disk-01&fig=whale-1.txt\r\nHTTP/v1.1\r\nhost: redes.ecci\r\n\r\n";
-   //char * request = (char *) "GET /ci0123 HTTP/1.1\r\nhost:redes.ecci\r\n\r\n";
+   //char * whale = (char *) "GET /aArt/index.php?disk=Disk-01&fig=whale-1.txt\r\nHTTP/v1.1\r\nhost: redes.ecci\r\n\r\n";
+   char * request = (char *) "GET /ci0123 HTTP/1.1\r\nhost:redes.ecci\r\n\r\n";
 
    if (argc > 1 ) {
       port = 443;
@@ -35,7 +35,7 @@ int main( int argc, char * argv[] ) {
 
    memset( a, 0 , MAXBUF );
    client->MakeConnection( os, port );
-   client->Write(  (char * ) whale, strlen( whale ) );
+   client->Write(  (char * ) request, strlen( request ) );
    st = client->Read( a, MAXBUF );
    printf( "Bytes read %d\n%s\n", st, a);
 

@@ -97,7 +97,17 @@ SSLSocket::~SSLSocket() {
   *
  **/
 void SSLSocket::Init( bool serverContext ) {
+   SSL * ssl = nullptr;
+
+   this->InitContext( serverContext );
    
+   ssl = SSL_new( (SSL_CTX *) this->SSLContext );
+   if (nullptr == ssl) {
+      ERR_print_errors_fp(stderr);
+      throw std::runtime_error("SSLSocket::InitContext- Cannot create");
+   }
+
+   this->SSLStruct = (void *) ssl;
 
 }
 

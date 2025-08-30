@@ -156,26 +156,17 @@ int VSocket::EstablishConnection( const char *host, const char *service ) {
         throw std::runtime_error(std::string("getaddrinfo: ") + gai_strerror(status));
     }
 
-    // Recorrer las posibles direcciones y probar conexión
-    for (p = res; p != nullptr; p = p->ai_next) {
-        // Crear socket
-        idSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (idSocket == -1) {
-            continue; // error, probar siguiente
+    bool connected = false;
+    for (p = res; p; p = p->ai_next) {
+        char host[NI_MAXHOST], service[NI_MAXSERV];
+        getnameinfo(p->ai_addr, p->ai_addrlen, host, sizeof(host), service, sizeof(service), NI_NUMERICHOST | NI_NUMERICSERV);
+        
+        st = connect(idSocket, p->ai_addr, p->ai_addrlen);
+        if (st == 0) {
+            connected = true;
+            break;
         }
-
-        // Intentar conectar
-        if (connect(idSocket, p->ai_addr, p->ai_addrlen) == -1) {
-            close(idSocket);
-            idSocket = -1;
-            continue; // probar siguiente dirección
-        }
-
-        // Conexión exitosa
-        st = 0;
-        break;
     }
-
     freeaddrinfo(res); // liberar memoria
 
     if (st == -1) {

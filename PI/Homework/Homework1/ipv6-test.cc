@@ -12,14 +12,14 @@
 #include "Socket.h"
 
 int main( int argc, char * argv[] ) {
-   const char * lab = "fe80::4161:e292:8c1d:e3c0%enp0s31f6";
+   const char * lab = "::1";
    const char * request = "GET / HTTP/1.1\r\nhost: redes.ecci\r\n\r\n";
 
    Socket s( 's', true );
    char a[512];
 
    memset( a, 0, 512 );
-   s.MakeConnection( lab, (char *) "http" );
+   s.MakeConnection( lab, (char *) "8080" );
    s.Write(  request );
    s.Read( a, 512 );
    printf( "%s\n", a);

@@ -1,0 +1,44 @@
+Protocolo HTTP: Cliente - Tenedor - Servidor
+
+1. Cliente realiza un request al tenedor.
+
+Cliente → Tenedor:
+GET /folder/target
+
+ejemplo:
+GET /figuresList/whale
+HTTP/v1.1
+Host: localhost
+
+GET /figuresList/whale HTTP/v1.1\r\nhost: localhost\r\n\r\n
+
+
+2. Tenedor traduce el request para el servidor
+
+Tenedor → Servidor:
+TOMAR /carpeta/objetivo
+
+ejemplo:
+TOMAR /figuresList/whale
+
+carpeta: (folder)figuresList
+objetivo: (target)whale
+
+3. Response del servidor al tenedor
+
+Servidor → Tenedor:
+RESPUESTA 250 ARCHIVO-ENTREGADO
+LONGITUD: <tamaño del archivo>
+TIPO: texto/plano
+
+<contenido de whale>
+
+4. Tenedor traduce de nuevo al formato HTTP para el cliente
+
+Tenedor → Cliente:
+HTTP/1.1 200 OK
+Content-Length: <tamaño del archivo>
+Content-Type: text/plain
+
+<contenido de whale>
+

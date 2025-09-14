@@ -237,7 +237,19 @@ int VSocket::MarkPassive( int backlog ) {
 int VSocket::WaitForConnection( void ) {
    int st = -1;
 
+   struct sockaddr_in host4;
+   socklen_t socklen;
+
+   host4.sin_family = this->domain;
+   host4.sin_addr.s_addr = htonl( INADDR_ANY );
+   host4.sin_port = htons( port );
+   memset(host4.sin_zero, '\0', sizeof (host4.sin_zero));
+   st = accept(this->idSocket, (struct sockaddr *) &host4, &socklen);
+
+
+   if (st == -1){
    throw std::runtime_error( "VSocket::WaitForConnection" );
+   }
 
    return st;
 

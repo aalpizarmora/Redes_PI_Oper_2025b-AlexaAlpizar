@@ -24,6 +24,9 @@ ForkMirrorServer.out:	ForkMirrorServer.o VSocket.o Socket.o
 	
 ThreadMirrorServer.out:	ThreadMirrorServer.o VSocket.o Socket.o 
 	$(CXX) ThreadMirrorServer.o VSocket.o Socket.o $(LDFLAGS) -o $@
+
+MirrorClient.out:	MirrorClient.o VSocket.o Socket.o 
+	$(CXX) MirrorClient.o VSocket.o Socket.o $(LDFLAGS) -o $@
 	
 clean:
 	rm -f *.o *.out

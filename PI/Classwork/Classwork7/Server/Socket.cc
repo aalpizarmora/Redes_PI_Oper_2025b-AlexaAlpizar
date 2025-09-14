@@ -38,7 +38,7 @@ Socket::Socket( char t, bool IPv6 ){
 
 Socket::Socket( int id){
 
-   this->BuildSocket (id);
+   this->BuildSocket(id);
 }
 
 

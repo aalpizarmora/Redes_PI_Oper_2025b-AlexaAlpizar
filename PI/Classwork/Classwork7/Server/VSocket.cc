@@ -244,6 +244,7 @@ int VSocket::WaitForConnection( void ) {
    host4.sin_addr.s_addr = htonl( INADDR_ANY );
    host4.sin_port = htons( port );
    memset(host4.sin_zero, '\0', sizeof (host4.sin_zero));
+   socklen = sizeof(struct sockaddr_in);
    st = accept(this->idSocket, (struct sockaddr *) &host4, &socklen);
 
 

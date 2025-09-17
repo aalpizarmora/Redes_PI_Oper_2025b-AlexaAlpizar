@@ -35,17 +35,22 @@ cd Redes_PI_Oper_2025b-AlexaAlpizar
 
 3. Compila el programa usando el Makefile.
 
+```bash
 make clean
 make
+```
 
 4. Ejecuta el programa.
 
 # Para crear un nuevo disco
+```bash
 ./programa 1
+```
 
 # Para usar un disco existente
+```bash
 ./programa 0
-
+```
 ### Funcionalidades
 
 Una vez ejecutado el programa, aparecerá un menú interactivo con las siguientes opciones:

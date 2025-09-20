@@ -1,0 +1,6 @@
+# archivos de compilacion
+*.o
+*.out
+.vscode/
+bin/
+build/

@@ -30,14 +30,14 @@
   *  @param     bool ipv6: if we need a IPv6 socket
   *
  **/
-SSLSocket::SSLSocket( bool IPv6 ) {
+SSLSocket::SSLSocket( bool IPv6 , bool context) {
 
    this->BuildSocket( 's', IPv6 );
 
    this->SSLContext = nullptr;
    this->SSLStruct = nullptr;
-   printf ("Cliente");
-   this->Init(true);					// Initializes to client context
+
+   this->Init(context);					// Initializes to client context
 
 
 }
@@ -53,20 +53,17 @@ SSLSocket::SSLSocket( bool IPv6 ) {
   *  @param     bool IPv6: if we need a IPv6 socket
   *
  **/
-SSLSocket::SSLSocket( bool IPv6, const char * certFileName, const char * keyFileName, bool context ) {
-    this->BuildSocket('s', IPv6);
-    printf ("Socket Created");
-
+SSLSocket::SSLSocket( const char * certFileName, const char * keyFileName, bool context ) {
+    this->BuildSocket('s', false);
 
     this->SSLContext = nullptr;
     this->SSLStruct = nullptr;
 
-   if (context){
-      printf ("Server Context");
-      this->certfilename = certFileName;
-      this->keyfilename = keyFileName;
-      this->Init(false);  // contexto de servidor
-   }
+    this->certfilename = certFileName;
+    this->keyfilename = keyFileName;
+    printf("Cert: %s Key: %s\n", certFileName, keyFileName);
+
+    this->Init(context);  // contexto de servidor
 }
 
 
@@ -111,14 +108,16 @@ SSLSocket::~SSLSocket() {
  **/
 void SSLSocket::Init(bool context) {
    if (context){
+      printf("Client context\n");
       this->InitContext(); // primero contexto de cliente
+
    }
    else {
-      this->InitServer(this->certfilename, this->keyfilename);
+      printf("Server context\n");
+      this->InitServer();
    }
    
     SSL* ssl = SSL_new((SSL_CTX*)this->SSLContext);
-    printf ("Create SSLStruct");
     if (nullptr == ssl) {
         ERR_print_errors_fp(stderr);
         throw std::runtime_error("SSLSocket::Init - Cannot create SSL object");
@@ -127,10 +126,15 @@ void SSLSocket::Init(bool context) {
     this->SSLStruct = (void*)ssl;
 }
 
-void SSLSocket::InitServer(const char *certFileName, const char *keyFileName) {
+
+void SSLSocket::InitServer(){
     this->InitServerContext();
-    printf ("Load Certificates");
-    this->LoadCertificates(certFileName, keyFileName);
+    SSL_CTX *context = reinterpret_cast<SSL_CTX *>(this->SSLContext);
+    SSL *ssl = SSL_new(context); // Crear la estructura SSL
+    if (!ssl) {
+       throw std::runtime_error("SSLSocket::Init( bool ): Error al crear SSL");
+    }
+    this->LoadCertificates(); // Cargar certificados
 }
 
 
@@ -156,12 +160,24 @@ void SSLSocket::InitContext() {
 }
 
 void SSLSocket::InitServerContext() {
-    const SSL_METHOD* method = TLS_server_method();
-    SSL_CTX* context = SSL_CTX_new(method);
-    if (!context) {
+    const SSL_METHOD* method;
+    SSL_CTX* context;
+
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+
+    method = TLS_server_method();  // servidor espera conexiones
+    if (nullptr == method) {
+        throw std::runtime_error("SSLSocket::InitServerContext - No SSL_METHOD available");
+    }
+
+    context = SSL_CTX_new(method);
+    if (nullptr == context) {
         ERR_print_errors_fp(stderr);
         throw std::runtime_error("SSLSocket::InitServerContext - Cannot create context");
     }
+
     this->SSLContext = (void*)context;
 }
 
@@ -174,16 +190,16 @@ void SSLSocket::InitServerContext() {
  *  @param	const char * keyFileName, file containing keys
  *
  **/
- void SSLSocket::LoadCertificates( const char * certFileName, const char * keyFileName ) {
+ void SSLSocket::LoadCertificates() {
        // Cargar certificado y llave
     SSL_CTX* ctx = (SSL_CTX*)this->SSLContext;
 
-    if (SSL_CTX_use_certificate_file(ctx, certFileName, SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, this->certfilename, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         throw std::runtime_error("Failed to load certificate");
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ctx, keyFileName, SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, this->keyfilename, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         throw std::runtime_error("Failed to load private key");
     }
@@ -313,8 +329,7 @@ size_t SSLSocket::Write( const char * string ) {
  **/
 size_t SSLSocket::Write( const void * buffer, size_t size ) {
    int st = -1;
-   SSL *ssl = (SSL*)(this->SSLStruct);
-   st = SSL_write(ssl, buffer, static_cast<int>(size));
+   st = SSL_write((SSL*)(this->SSLStruct), buffer, static_cast<int>(size));
    if ( -1 == st ) {
       throw std::runtime_error( "SSLSocket::Write( void *, size_t )" );
    }
@@ -379,18 +394,25 @@ const char * SSLSocket::GetCipher() {
 
 }
 
-void SSLSocket::CopyContext(SSLSocket* original) {
-    SSL_CTX * context = (SSL_CTX *)original->SSLContext;
+void SSLSocket::CopyContext(SSLSocket* sockerCopy){
+   if (!sockerCopy) {
+      throw std::invalid_argument("Original SSLSocket is null");
+   }
 
-    this->SSLStruct = SSL_new(context);
-    if (!this->SSLStruct) {
-        throw std::runtime_error("Failed to create SSL structure in CopyContext()");
-    }
+   SSL_CTX *context = reinterpret_cast<SSL_CTX *>(sockerCopy->SSLContext);
 
-    if (SSL_set_fd((SSL*)this->SSLStruct, this->idSocket) == 0) {
-        SSL_free((SSL*)this->SSLStruct);
-        throw std::runtime_error("Failed to set fd for SSL in CopyContext()");
-    }
+   SSL *ssl = SSL_new(context); // Crear la estructura SSL
+   if (!ssl) {
+       ERR_print_errors_fp(stderr);
+       throw std::runtime_error("SSLSocket::Copy: Error al crear SSL");
+   }
+
+   this->SSLStruct = ssl;
+   if (SSL_set_fd((SSL*)this->SSLStruct, this->idSocket) != 1) {
+       ERR_print_errors_fp(stderr);
+       throw std::runtime_error("SSLSocket::Copy: Error al asociar socket con SSL");
+   }
+
 }
 
 /**

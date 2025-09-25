@@ -13,6 +13,8 @@
 
 #ifndef VSocket_h
 #define VSocket_h
+
+#include <cstddef>
  
 class VSocket {
    public:

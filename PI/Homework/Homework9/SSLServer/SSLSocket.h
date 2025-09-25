@@ -20,8 +20,8 @@
 class SSLSocket : public VSocket {
 
    public:
-      SSLSocket( bool IPv6 = false);				// Not possible to create with UDP, client constructor
-      SSLSocket( bool IPv6, const char *, const char *, bool context );		// For server connections
+      SSLSocket( bool IPv6 = false, bool context = true);				// Not possible to create with UDP, client constructor
+      SSLSocket( const char * certFileName, const char * keyFileName, bool context );		// For server connections
       SSLSocket( int );
       ~SSLSocket();
       int MakeConnection( const char *, int );
@@ -34,16 +34,17 @@ class SSLSocket : public VSocket {
       SSLSocket * Accept();
       void CopyContext(SSLSocket * original);
       SSLSocket * AcceptConnection();
-      void InitServer(const char *certFileName, const char *keyFileName);
+
+      const char * certfilename;
+      const char * keyfilename;
 
 
    private:
-      void Init( bool context );		// Defaults to create a client context, true if server context needed
-      void InitContext( );
+      void Init(bool context);		// Defaults to create a client context, true if server context needed
+      void InitContext();
+      void InitServer();
       void InitServerContext();
-      void LoadCertificates( const char *, const char * );
-   const char * certfilename;
-   const char * keyfilename;
+      void LoadCertificates();
 
 // Instance variables      
       void * SSLContext;				// SSL context
@@ -52,4 +53,3 @@ class SSLSocket : public VSocket {
 };
 
 #endif
-

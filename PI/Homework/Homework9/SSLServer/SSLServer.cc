@@ -57,17 +57,15 @@ void Service( SSLSocket * client ) {
 
 
 int main( int cuantos, char ** argumentos ) {
-    printf ("Create SSLServer");
    SSLSocket * server, * client;
    std::thread * worker;
    int port = PORT;
-
    
    if ( cuantos > 1 ) {
       port = atoi( argumentos[ 1 ] );
    }
-   printf ("Port %d", port);
-   server = new SSLSocket(false, (const char *) "ci0123.pem", (const char *) "ci0123.pem", true );
+
+   server = new SSLSocket( (const char *) "ci0123.pem", (const char *) "key0123.key", false );
    server->Bind( port );
    server->MarkPassive( 10 );
 

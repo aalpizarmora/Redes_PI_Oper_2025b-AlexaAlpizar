@@ -34,7 +34,7 @@ int main(int cuantos, char * argumentos[] ) {
    int bytes;
    char *hostname, *portnum;
    
-   client = new SSLSocket('s');
+   client = new SSLSocket();
    if ( cuantos != 3 ) {
       printf("usage: %s <hostname> <portnum>\n", argumentos[0] );
       exit(0);

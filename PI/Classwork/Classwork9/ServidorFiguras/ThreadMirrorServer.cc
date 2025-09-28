@@ -15,6 +15,7 @@
 #include <thread>
 
 #include "Socket.h"
+#include "FileSystem.h"
 
 #define PORT 1234
 #define BUFSIZE 512
@@ -26,15 +27,40 @@
  *      Write it back to client
  *
  **/
-void task( VSocket * client ) {
-   char a[ BUFSIZE ];
+void task(VSocket* client) {
+    char a[BUFSIZE];
 
-   client->Read( a, BUFSIZE );	// Read a string from client, data will be limited by BUFSIZE bytes
-   std::cout << "Server received: " << a << std::endl;
-   client->Write( a );		// Write it back to client, this is the mirror function
-   client->Close();		// Close socket in parent
 
+    // Crear instancia del sistema de archivos
+    FileSystem fs(false);
+
+    // Leer comando/nombre de archivo del cliente
+    client->Read(a, BUFSIZE); // Read a string from client, data will be limited by BUFSIZE bytes
+    std::cout << "Server received: " << a << std::endl;
+
+    if (strcmp(a, "lista") == 0) {
+        // Cliente pidió lista de archivos
+        std::vector<Entrada> entradas = fs.leerDirectorio();
+        std::string lista;
+        for (const auto& entrada : entradas) {
+            lista += std::string(entrada.nombre) + "\n";
+        }
+        client->Write(lista.c_str()); // Write it back to client, this is the mirror function
+    } else {
+        // Cliente pidió un archivo específico
+        Entrada entrada = fs.buscarEntradaPorNombre(a);
+        if (entrada.indice != -1) {
+            std::string contenido = fs.leerArchivoDesdeIndice(entrada.indice);
+            client->Write(contenido.c_str());
+        } else {
+            std::string mensaje = "Archivo no encontrado.\n";
+            client->Write(mensaje.c_str());
+        }
+    }
+
+    client->Close();  // Close socket in parent cliente
 }
+
 
 
 /**

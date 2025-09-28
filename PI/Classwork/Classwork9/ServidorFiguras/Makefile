@@ -25,8 +25,8 @@ $(info $$TARGETS = $(TARGETS))
 ForkMirrorServer.out:	ForkMirrorServer.o VSocket.o Socket.o FileSystem.o
 	$(CXX) ForkMirrorServer.o VSocket.o Socket.o FileSystem.o $(LDFLAGS) -o $@
 	
-ThreadMirrorServer.out:	ThreadMirrorServer.o VSocket.o Socket.o 
-	$(CXX) ThreadMirrorServer.o VSocket.o Socket.o $(LDFLAGS) -o $@
+ThreadMirrorServer.out:	ThreadMirrorServer.o VSocket.o Socket.o FileSystem.o
+	$(CXX) ThreadMirrorServer.o VSocket.o Socket.o FileSystem.o $(LDFLAGS) -o $@
 
 MirrorClient.out:	MirrorClient.o VSocket.o Socket.o 
 	$(CXX) MirrorClient.o VSocket.o Socket.o $(LDFLAGS) -o $@

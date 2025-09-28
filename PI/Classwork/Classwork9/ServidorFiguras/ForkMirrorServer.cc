@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include "Socket.h"
-#include "FileSystem.h"
 
 #define PORT 1234
 #define BUFSIZE 512
@@ -43,36 +42,6 @@ int main( int argc, char ** argv ) {
             s1->Close();			// Close original socket "s1" in child
             memset( a, 0, BUFSIZE );
             s2->Read( a, BUFSIZE );	// Read a string from client using new conection info
-            
-            bool discoExiste = true;
-            std::ifstream test("disco.bin");
-            if (!test) {
-            discoExiste = false;
-    }
-    test.close();
-    
-    FileSystem fs(!discoExiste);
-
-            if (strcmp(a, "lista") == 0) {
-                // Si el cliente pidió la lista de archivos
-                std::vector<Entrada> entradas = fs.leerDirectorio();
-                std::string lista;
-                for (const auto& entrada : entradas) {
-                    lista += std::string(entrada.nombre) + "\n";
-                }
-                s2->Write(lista.c_str());
-            } else {
-                // Si el cliente pidió un archivo específico
-                Entrada entrada = fs.buscarEntradaPorNombre(a);
-                if (entrada.indice != -1) {
-                    std::string contenido = fs.leerArchivoDesdeIndice(entrada.indice);
-                    s2->Write(contenido.c_str());
-                } else {
-                    std::string mensaje = "Archivo no encontrado.\n";
-                    s2->Write(mensaje.c_str());
-                }
-            }
-
             s2->Write( a );		// Write it back to client, this is the mirror function
             exit( 0 );			// Exit, finish child work
          }

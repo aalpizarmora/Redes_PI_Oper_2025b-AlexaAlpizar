@@ -7,6 +7,7 @@ FileSystem::FileSystem(bool crearNuevoDisco) {
         // Inicializar bitmap en ceros
         inicializarBitmap();
     }
+    inicializarBitmap();
     // Cargar el bitmap en memoria
     cargarBitmap();
 }

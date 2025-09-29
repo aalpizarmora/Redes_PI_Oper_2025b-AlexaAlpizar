@@ -27,7 +27,7 @@ int main( int argc, char ** argv ) {
    if ( argc > 1 ) {
       s->Write( argv[1] );		// If provided, send first program argument to server
    } else {
-      s->Write( "lista" );
+      s->Write( "Cat.txt" );
    }
    s->Read( buffer, BUFSIZE );	// Read answer sent back from server
    printf( "%s", buffer );	// Print received string, mirror example this will print same sent string

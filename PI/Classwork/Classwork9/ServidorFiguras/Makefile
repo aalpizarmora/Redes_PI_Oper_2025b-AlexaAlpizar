@@ -35,4 +35,4 @@ FileSystem.o: FileSystem.cpp FileSystem.h
 	$(CXX) $(CXXFLAGS) FileSystem.cpp
 
 clean:
-	rm -f *.o *.out disco.bin
+	rm -f *.o *.out

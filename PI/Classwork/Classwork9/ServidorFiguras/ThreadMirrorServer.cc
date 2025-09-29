@@ -27,18 +27,16 @@
  *      Write it back to client
  *
  **/
-void task(VSocket* client) {
+void task(VSocket* client, FileSystem fs) {
     char a[BUFSIZE];
 
 
-    // Crear instancia del sistema de archivos
-    FileSystem fs(false);
-
     // Leer comando/nombre de archivo del cliente
-    client->Read(a, BUFSIZE); // Read a string from client, data will be limited by BUFSIZE bytes
-    std::cout << "Server received: " << a << std::endl;
+    int bytes = client->Read(a, BUFSIZE); // Read a string from client, data will be limited by BUFSIZE bytes
+    std::string request(a, bytes);
+    std::cout << "Server received: " << request << std::endl;
 
-    if (strcmp(a, "lista") == 0) {
+    if (request == "lista") {
         // Cliente pidió lista de archivos
         std::vector<Entrada> entradas = fs.leerDirectorio();
         std::string lista;
@@ -46,10 +44,13 @@ void task(VSocket* client) {
             lista += std::string(entrada.nombre) + "\n";
         }
         client->Write(lista.c_str()); // Write it back to client, this is the mirror function
-    } else {
+    } else if (request == "Cat.txt") {
         // Cliente pidió un archivo específico
+        std::cout << "Buscando archivo: " << request << "\n";
         Entrada entrada = fs.buscarEntradaPorNombre(a);
+        std::cout << "Buscando archivo: " << entrada.indice << "\n";
         if (entrada.indice != -1) {
+
             std::string contenido = fs.leerArchivoDesdeIndice(entrada.indice);
             client->Write(contenido.c_str());
         } else {
@@ -71,6 +72,9 @@ void task(VSocket* client) {
  *
  **/
 int main( int argc, char ** argv ) {
+   // Crear instancia del sistema de archivos
+    FileSystem fs(false);
+
    std::thread * worker;
    VSocket * s1, * client;
 
@@ -81,7 +85,7 @@ int main( int argc, char ** argv ) {
 
    for( ; ; ) {
       client = s1->AcceptConnection();	 	// Wait for a client connection
-      worker = new std::thread( task, client );
+      worker = new std::thread( task, client, fs );
    }
 
 }

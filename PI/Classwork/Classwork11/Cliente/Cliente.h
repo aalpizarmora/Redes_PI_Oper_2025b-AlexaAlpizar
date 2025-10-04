@@ -1,8 +1,9 @@
 #ifndef CLIENTE_H
 #define CLIENTE_H
+#include <string>
+
 
 #include "Socket.h"
-#include "SSLSocket.h"
 
 /**
  * @class Cliente
@@ -42,6 +43,11 @@ class Cliente{
      */
     void start();
 
+    void listFiles();
+    void requestFile(const char* filename);
+    void submitFile(const char* filename, const char* content);
+    void deleteFile(const char* filename);
+
     private:
     VSocket* socketCliente; /**< Puntero al socket utilizado para la conexión. */
     int puerto;             /**< Puerto del servidor. */
@@ -69,6 +75,9 @@ class Cliente{
      * @brief Envía una solicitud al servidor.
      */
     void sendRequest();
+
+   
+    void sendProtocolRequest( const std::string& command, const std::string& filename = "", const std::string& content = "" );
 };
 
 #endif

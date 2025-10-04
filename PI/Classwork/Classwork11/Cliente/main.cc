@@ -19,8 +19,44 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Uso: " << argv[0] << " [IP] [Puerto]" << std::endl;
         return 1;
     }
-    cliente->start();
 
-    delete cliente; // Liberar memoria
+    std::cout << "\n=== CLIENTE PROTOCOLO ===" << std::endl;
+    std::cout << "Comandos disponibles:" << std::endl;
+    std::cout << "1. list - Listar archivos" << std::endl;
+    std::cout << "2. request <nombre> - Solicitar archivo" << std::endl;
+    std::cout << "3. submit <nombre> - Subir archivo" << std::endl;
+    std::cout << "4. delete <nombre> - Eliminar archivo" << std::endl;
+    std::cout << "0. salir - Terminar" << std::endl;
+
+    std::string comando, nombre;
+    
+    while (true) {
+        std::cout << "\nIngrese comando: ";
+        std::cin >> comando;
+        
+        if (comando == "0" || comando == "salir") break;
+        else if (comando == "list") cliente->listFiles();
+        else if (comando == "request" || comando == "submit" || comando == "delete") {
+            std::cout << "Ingrese nombre del archivo: ";
+            std::cin >> nombre;
+            
+            if (comando == "request") cliente->requestFile(nombre.c_str());
+            else if (comando == "delete") cliente->deleteFile(nombre.c_str());
+            else if (comando == "submit") {
+                std::cout << "Ingrese contenido: ";
+                std::string contenido;
+                std::cin.ignore();
+                std::getline(std::cin, contenido);
+                cliente->submitFile(nombre.c_str(), contenido.c_str());
+            }
+        }
+        else {
+            std::cout << "Comando no reconocido" << std::endl;
+        }
+    }
+
+    delete cliente;
     return 0;
 }
+
+

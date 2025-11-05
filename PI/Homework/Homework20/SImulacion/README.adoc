@@ -1,0 +1,126 @@
+= Servidor de Figuras (Cliente ↔ Tenedor ↔ Servidor ↔ FileSystem)
+:toc: left
+:toclevels: 2
+:icons: font
+
+== ¿De qué trata el proyecto?
+
+Este proyecto implementa un mini–sistema de almacenamiento de “figuras” (archivos de texto) con arquitectura por capas:
+
+- **Cliente**: menú interactivo en consola.
+- **Tenedor**: puente/dispatcher. Traduce comandos en texto del Cliente a mensajes tipados y enruta respuestas.
+- **Servidor**: ejecuta operaciones sobre el **FileSystem** (crear, guardar, leer, listar, eliminar).
+- **FileSystem**: persiste datos en `unidad.bin` y expone operaciones como `crearInodo`, `escribir`, `leer(nombre, nbytes)`, `reemplazar`, `imprimir`, `eliminar`.
+
+Comunicación interna con **4 colas** (TSQ) para desacoplar componentes:
+
+- *Públicas* (texto):
+  - `pubReqQ`  → `TSQ<std::string>` — Cliente → Tenedor
+  - `pubRespQ` → `TSQ<std::string>` — Tenedor → Cliente
+- *Privadas* (tipadas):
+  - `privReqQ`  → `TSQ<DealerMsg>`  — Tenedor → Servidor
+  - `privRespQ` → `TSQ<Reply>`      — Servidor → Tenedor
+
+Mensajes tipados usados:
+- `DealerVerb`: `FETCH_LIST`, `FETCH_FILE`, `STORE`, `REMOVE`, `CONNECT`, `KILL`
+- `DealerMsg`: `{ verb, filename, content, nbytes }`
+- `Reply`: `{ code(OK|NOT_FOUND|ERROR), message, content }`
+
+== Opciones del menú (Cliente)
+
+El Cliente envía comandos en texto al Tenedor, que los convierte a `DealerMsg`:
+
+1. **LIST**  
+   Protocolo: `LIST`  
+   Lista el directorio (el Servidor imprime en su salida y responde OK al cliente).
+
+2. **SUBMIT archivo**  
+   Protocolo: `SUBMIT <nombre>|<contenido>`  
+   Lee un archivo del host y lo guarda en el FileSystem con ese nombre.
+
+3. **SUBMIT texto**  
+   Protocolo: `SUBMIT <nombre>|<contenido>`  
+   Escribes el contenido directamente en consola y se almacena.
+
+4. **REQUEST archivo**  
+   Protocolo: `REQUEST <nombre>|<nbytes>`  
+   Lee *nbytes* del archivo y devuelve el contenido.
+
+5. **DELETE archivo**  
+   Protocolo: `DELETE <nombre>`  
+   Elimina el archivo (usa `FileSystem::eliminar`).
+
+0. **Salir** (Aun no funciona el apagado ordenado).
+
+
+Notas:
+- Para `REQUEST` es **obligatorio** indicar `nbytes` (el FileSystem lo requiere).
+- `SUBMIT` usa `|` como separador entre nombre y contenido. Si el contenido puede incluir `|`, conviene migrar a un protocolo con longitud explícita o a base64.
+
+== Cómo compilar y ejecutar
+
+Requisitos: g++ (C++17) y pthread (Linux).
+
+.Compilar
+[source,console]
+----
+make
+----
+
+.Ejecutar
+[source,console]
+----
+./bin/fs_app 1
+./bin/fs_app 0
+----
+
+.Limpiar
+[source,console]
+----
+make clean
+----
+
+
+== Estructura de carpetas
+
+Basado en el árbol mostrado:
+
+[source,console]
+----
+├─ app/
+│  └─ main.cpp
+├─ common/
+│  ├─ Client.cpp
+│  ├─ Client.hpp
+│  ├─ Semaphore.cpp
+│  ├─ Semaphore.hpp
+│  ├─ Thread.cpp
+│  ├─ Thread.hpp
+│  ├─ common.hpp
+│  ├─ socket.h
+│  ├─ Structs.h
+│  └─ tsq.hpp
+├─ core/
+│  ├─ FileSystem/
+│  │  ├─ FileSystem.cpp
+│  │  └─ FileSystem.h
+│  ├─ servidor.cpp
+│  ├─ servidor.hpp
+│  ├─ tenedor.cpp
+│  └─ tenedor.hpp
+├─ ejemplo.txt
+├─ Makefile
+└─ README.adoc
+----
+
+
+== Flujo de mensajes (resumen)
+
+Cliente (texto) → `pubReqQ` → Tenedor →(`DealerMsg`)→ `privReqQ` → Servidor → FileSystem  
+Cliente ← `pubRespQ` ← Tenedor ←(`Reply`)← `privRespQ` ← Servidor
+
+== Notas y limitaciones
+
+- `SUBMIT` con `|` como separador es frágil ante contenidos arbitrarios. Alternativas: longitud explícita (`len=N`) o base64.
+- El listado actualmente se imprime en el Servidor; si se desea, puede devolverse en `Reply` para mostrarlo directamente en el Cliente.
+- El apagado ordenado empuja señales a las colas para desbloquear hilos (`KILL` y “dummys” si hace falta).

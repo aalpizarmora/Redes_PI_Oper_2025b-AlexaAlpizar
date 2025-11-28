@@ -1,0 +1,98 @@
+= Tenedor y Servidor de Figuras (Version Basica)
+Adrián Arrieta
+2025
+
+== Descripción General
+
+Esta implementación establece una comunicación básica entre:
+
+* **Tenedor** (nodo central de descubrimiento)
+* **Servidores de Figuras** (nodos distribuídos)
+
+La comunicación se realiza mediante dos fases:
+
+1. **Descubrimiento vía UDP (HELLO)**  
+   Cada servidor de figuras envía un mensaje:
+   `HELLO_DRAWING;PORT=<puerto>`  
+   al Tenedor usando un socket UDP.
+
+2. **Conexión segura vía TCP + SSL**  
+   Una vez detectado, el Tenedor establece conexión TLS con el servidor de figuras y realiza una solicitud HTTP con acción `List` para obtener la lista de figuras almacenadas en su FileSystem.
+
+Esta versión es *ligera*: no usa caché ni reenvío complejo; únicamente establece la conexión mínima necesaria para la arquitectura del proyecto principal.
+
+== Cómo ejecutar
+
+=== 1. Compilar y ejecutar el Tenedor
+
+[source,bash]
+----
+make
+./Tenedor
+----
+
+El Tenedor queda escuchando mensajes de descubrimiento en el puerto UDP `9000`.
+
+=== 2. Ejecutar un Servidor de Figuras
+
+Cada servidor requiere que se indique el puerto TCP/SSL por el cual atenderá solicitudes del Tenedor.
+
+Formato:
+
+[source,bash]
+----
+./DrawServer PUERTO
+----
+
+Ejemplo:
+
+[source,bash]
+----
+./DrawServer 8081
+----
+
+Al arrancar, el servidor:
+
+1. Crea su FileSystem minimalista.
+2. Carga la figura `gato.dat`.
+3. Envía un mensaje UDP al Tenedor anunciando su puerto.
+4. Se queda escuchando conexiones SSL del Tenedor.
+
+== Flujo de Comunicación
+
+[cols="1,3"]
+|===
+| Etapa | Descripción
+
+| **HELLO UDP**
+| El servidor de dibujos crea un socket UDP y envía:  
+  `HELLO_DRAWING;PORT=<puerto>` al Tenedor en `127.0.0.1:9000`.
+
+| **Registro en el Tenedor**
+| El Tenedor recibe el HELLO, registra el servidor y abre una conexión SSL hacia ese puerto.
+
+| **Solicitud por SSL**
+| Usando `SSLSocket`, el Tenedor envía una petición HTTP con acción `List` para obtener las figuras disponibles.
+
+| **Respuesta**
+| El servidor responde con una página HTML+preformato que incluye las figuras almacenadas en su FileSystem.
+|===
+
+== Limitaciones de esta versión
+
+* No incluye servidor de caché.
+* No reenvía solicitudes complejas.
+* Solo soporta acciones: `List`, `Request`, `Submit` y `Delete`.
+* No maneja reconexiones, timeouts ni fallas distribuidas.
+
+== Propósito
+
+Este código funciona como un **avance mínimo viable** para probar:
+
+* Descubrimiento entre nodos
+* Comunicación UDP/TCP + SSL
+* Integración inicial con FileSystem
+* Flujo base Tenedor → Servidor de Figuras
+
+Sirve como base para conectar luego el sistema de **caché**, **varios servidores**, y la **topología final del proyecto**.
+

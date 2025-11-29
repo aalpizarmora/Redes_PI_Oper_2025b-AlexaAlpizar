@@ -1,0 +1,292 @@
+Configuración para conexiones en isla local:
+
+leonardo@fedora:~$ sudo bash
+[sudo] contraseña para leonardo: 
+root@fedora:/home/leonardo# sudo ls /dev/tty*
+/dev/tty    /dev/tty16	/dev/tty24  /dev/tty32	/dev/tty40  /dev/tty49	/dev/tty57  /dev/tty8	 /dev/ttyS15  /dev/ttyS23  /dev/ttyS31
+/dev/tty0   /dev/tty17	/dev/tty25  /dev/tty33	/dev/tty41  /dev/tty5	/dev/tty58  /dev/tty9	 /dev/ttyS16  /dev/ttyS24  /dev/ttyS4
+/dev/tty1   /dev/tty18	/dev/tty26  /dev/tty34	/dev/tty42  /dev/tty50	/dev/tty59  /dev/ttyS0	 /dev/ttyS17  /dev/ttyS25  /dev/ttyS5
+/dev/tty10  /dev/tty19	/dev/tty27  /dev/tty35	/dev/tty43  /dev/tty51	/dev/tty6   /dev/ttyS1	 /dev/ttyS18  /dev/ttyS26  /dev/ttyS6
+/dev/tty11  /dev/tty2	/dev/tty28  /dev/tty36	/dev/tty44  /dev/tty52	/dev/tty60  /dev/ttyS10  /dev/ttyS19  /dev/ttyS27  /dev/ttyS7
+/dev/tty12  /dev/tty20	/dev/tty29  /dev/tty37	/dev/tty45  /dev/tty53	/dev/tty61  /dev/ttyS11  /dev/ttyS2   /dev/ttyS28  /dev/ttyS8
+/dev/tty13  /dev/tty21	/dev/tty3   /dev/tty38	/dev/tty46  /dev/tty54	/dev/tty62  /dev/ttyS12  /dev/ttyS20  /dev/ttyS29  /dev/ttyS9
+/dev/tty14  /dev/tty22	/dev/tty30  /dev/tty39	/dev/tty47  /dev/tty55	/dev/tty63  /dev/ttyS13  /dev/ttyS21  /dev/ttyS3   /dev/ttyUSB0
+/dev/tty15  /dev/tty23	/dev/tty31  /dev/tty4	/dev/tty48  /dev/tty56	/dev/tty7   /dev/ttyS14  /dev/ttyS22  /dev/ttyS30
+
+root@fedora:/home/leonardo# minicom -s
+
+Bienvenido a minicom 2.9
+
+OPCIONES: I18n                                                               
+Compilado en Jan 17 2025, 00:00:00.                                          
+Puerto /dev/ttyUSB0, 13:56:16                                                
+                                                                             
+Presione CTRL-A Z para obtener ayuda sobre teclas especiales                 
+                                                                             
+Switch>enable
+Switch#configure terminal
+
+Switch(config)#vlan 620	
+Switch(config-vlan)#name Leo_Isla2
+
+Switch(config-vlan)#interface FastEthernet0/1
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 620
+Switch(config-vlan)#interface FastEthernet0/2
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 620
+Switch(config-if)#end
+Switch#
+Switch#show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- ------------------------
+1    default                          active    Fa0/13, Fa0/14, Fa0/15,6
+                                                Fa0/17, Fa0/18, Fa0/19,0
+                                                Fa0/21, Fa0/22, Fa0/23,4
+                                                Gi0/2
+620  Leo_Isla2                        active    Fa0/1, Fa0/2
+640  isla4                            active    
+1002 fddi-default                     act/unsup 
+1003 token-ring-default               act/unsup 
+1004 fddinet-default                  act/unsup 
+1005 trnet-default                    act/unsup 
+
+Switch#copy running-config startup-config
+Destination filename [startup-config]? 
+Building configuration...
+[OK]
+Switch#
+
+#Configuramos las direcciones IP en cada computadora:
+# PC1 (Personal)
+sudo ip addr add 172.16.123.38/28 dev eno1
+sudo ip link set eno1 up
+
+# PC2 (Lab)
+No requiere configuración
+
+Una vez configuradas las direcciones IP en cada computadora, verificamos haciendo un ping desde el switch:
+
+Para ello primero asignamos una dirección IP al switch:
+
+Switch#configure terminal 
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#interface vlan 620
+Switch(config-if)#ip address 172.16.123.34 255.255.255.0   
+Switch(config-if)#no shutdown
+
+#PC1
+Switch#ping 172.16.123.38
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 172.16.123.38, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/202/1007 s
+Switch#
+
+#PC2
+Switch#ping 172.16.123.37
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 172.16.123.37, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/203/1007 s
+Switch#
+
+Ahora hacemos ping de la PC1 a la PC2:
+leonardo@fedora:~$ ping 172.16.123.37
+PING 172.16.123.37 (172.16.123.37) 56(84) bytes de datos.
+64 bytes desde 172.16.123.37: icmp_seq=1 ttl=64 tiempo=1.26 ms
+64 bytes desde 172.16.123.37: icmp_seq=2 ttl=64 tiempo=0.619 ms
+64 bytes desde 172.16.123.37: icmp_seq=3 ttl=64 tiempo=0.470 ms
+64 bytes desde 172.16.123.37: icmp_seq=4 ttl=64 tiempo=0.967 ms
+64 bytes desde 172.16.123.37: icmp_seq=5 ttl=64 tiempo=0.965 ms
+^C
+--- 172.16.123.37 estadísticas ping ---
+5 paquetes transmitidos, 5 recibidos, 0% packet loss, time 4056ms
+rtt min/avg/max/mdev = 0.470/0.856/1.262/0.280 ms
+
+Configurar trunk entre switches:
+
+Switch(config)# interface GigabitEthernet0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk allowed vlan 620,630
+
+Configuración para conexiones entre dos islas:
+
+(primero se configuran dos switches L2 con los comandos mostrados en la primera sección)
+
+Configuración extra de switch L2 (Isla 2):
+
+Switch>enable
+Switch#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#interface vlan 630
+Switch(config-if)#
+%LINK-5-CHANGED: Interface Vlan630, changed state to up
+
+Switch(config-if)#ip address 172.16.123.50 255.255.255.240
+Switch(config-if)#no shutdown
+Switch(config-if)#
+
+Switch# configure terminal
+Switch(config)#vlan 620
+Switch(config-vlan)#interface Gig0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk allowed vlan 620
+Switch(config-if)#exit
+Switch(config)#exit
+Switch#
+	
+Switch#show interfaces Gig0/1 switchport
+Name: Gig0/1
+Switchport: Enabled
+Administrative Mode: trunk
+Operational Mode: down
+Administrative Trunking Encapsulation: dot1q
+Operational Trunking Encapsulation: dot1q
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 1 (default)
+Voice VLAN: none
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+Administrative private-vlan trunk native VLAN: none
+Administrative private-vlan trunk encapsulation: dot1q
+Administrative private-vlan trunk normal VLANs: none
+Administrative private-vlan trunk private VLANs: none
+Operational private-vlan: none
+Trunking VLANs Enabled: 620
+Pruning VLANs Enabled: 2-1001
+Capture Mode Disabled
+Capture VLANs Allowed: ALL
+Protected: false
+ --More-- 
+
+Configuración extra de switch L2 (Isla 3):
+
+Switch>enable
+Switch#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#interface vlan 630
+Switch(config-if)#
+%LINK-5-CHANGED: Interface Vlan630, changed state to up
+
+Switch(config-if)#ip address 172.16.123.50 255.255.255.240
+Switch(config-if)#no shutdown
+Switch(config-if)#
+
+Switch>enable
+Switch#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#interface gig0/1
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 630	
+Switch(config-if)#exit
+Switch(config)#exit
+Switch#
+	
+Switch# show interfaces Gig0/1 switchport
+Name: Gig0/1
+Switchport: Enabled
+Administrative Mode: trunk
+Operational Mode: down
+Administrative Trunking Encapsulation: dot1q
+Operational Trunking Encapsulation: dot1q
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 1 (default)
+Voice VLAN: none
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+Administrative private-vlan trunk native VLAN: none
+Administrative private-vlan trunk encapsulation: dot1q
+Administrative private-vlan trunk normal VLANs: none
+Administrative private-vlan trunk private VLANs: none
+Operational private-vlan: none
+Trunking VLANs Enabled: 630
+Pruning VLANs Enabled: 2-1001
+Capture Mode Disabled
+Capture VLANs Allowed: ALL
+Protected: false
+ --More-- 
+
+Configuración de switch L3:
+
+Switch>enable
+Switch#configure terminal
+
+Switch(config)#ip routing
+Switch(config)#vlan 620
+Switch(config-vlan)#name Isla2
+Switch(config-vlan)#exit
+Switch(config)#vlan 630
+Switch(config-vlan)#name Isla3
+Switch(config-vlan)#exit
+
+Switch(config)#interface vlan 620
+Switch(config-if)#
+Switch(config-if)#ip address 172.16.123.33 255.255.255.240
+Switch(config-if)#no shutdown
+
+Switch(config-if)#interface vlan 630
+Switch(config-if)#
+%LINK-5-CHANGED: Interface Vlan630, changed state to up
+Switch(config-if)#ip address 172.16.123.49 255.255.255.240
+Switch(config-if)#no shutdown
+
+DHCP Pool L2 (Isla 2):
+Switch(config-if)#ip dhcp excluded-address 172.16.123.33 172.16.123.34
+Switch(config)#ip dhcp pool VLAN620
+Switch(dhcp-config)#network 172.16.123.32 255.255.255.240
+Switch(dhcp-config)#default-router 172.16.123.33
+Switch(dhcp-config)#dns-server 8.8.8.8
+Switch(dhcp-config)#exit
+
+DHCP Pool L2 (Isla 3):
+Switch(config)#ip dhcp excluded-address 172.16.123.49 172.16.123.50
+Switch(config)#ip dhcp pool VLAN630
+Switch(dhcp-config)#network 172.16.123.48 255.255.255.240
+Switch(dhcp-config)#default-router 172.16.123.49
+Switch(dhcp-config)#dns-server 8.8.8.8
+Switch(dhcp-config)#exit
+
+Configuración final L3:
+Switch#enable
+Switch#configure terminal
+
+Switch(config)#interface FastEthernet0/2
+Switch(config-if)#switchport trunk encapsulation dot1q
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 620
+Switch(config-if)#description Trunk_L2_Isla2
+Switch(config-if)#exit
+
+Switch(config)#interface FastEthernet0/3
+Switch(config-if)#switchport trunk encapsulation dot1q
+Switch(config-if)#switchport mode trunk
+Switch(config-if)#switchport trunk allowed vlan 630
+Switch(config-if)#description Trunk_L2_Isla3
+Switch(config-if)#exit
+Switch(config)#
+
+Ping de la PC en la VLAN 620 (isla 2) a la VLAN 630 (isla 3):
+
+C:\>ping 172.16.123.51
+
+Pinging 172.16.123.51 with 32 bytes of data:
+
+Reply from 172.16.123.51: bytes=32 time<1ms TTL=127
+Reply from 172.16.123.51: bytes=32 time<1ms TTL=127
+Reply from 172.16.123.51: bytes=32 time<1ms TTL=127
+Reply from 172.16.123.51: bytes=32 time<1ms TTL=127
+
+Ping statistics for 172.16.123.51:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+
+C:\>
+
+Secret switch L2 Isla 2: 1304

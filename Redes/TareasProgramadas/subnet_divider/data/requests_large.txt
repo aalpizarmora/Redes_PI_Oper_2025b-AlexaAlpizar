@@ -1,0 +1,9 @@
+500 addresses for range A
+300 addresses for range B
+150 addresses for range C
+100 addresses for range D
+80 addresses for range E
+50 addresses for range F
+30 addresses for range G
+20 addresses for range H
+10 addresses for range I

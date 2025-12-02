@@ -1,0 +1,6 @@
+16 addresses for range A
+127 addresses for range B
+30 addresses for range C
+1024 addresses for range D
+511 addresses for range E
+128 addresses for range F
